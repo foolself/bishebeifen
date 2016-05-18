@@ -26,9 +26,8 @@ class Cmd(cmd.Cmd):
     output.
     """
 
-    def __init__(self, package):
-        # print "i am mwr/common/cmd_ext.py"
-        cmd.Cmd.__init__(self, package)
+    def __init__(self):
+        cmd.Cmd.__init__(self)
 
         self.__completer_stack = []
         self.__history_stack = []
@@ -43,73 +42,76 @@ class Cmd(cmd.Cmd):
         self.stderr = sys.stderr
         self.variables = {}
 
-    def cmdloop(self, intro=None, package=None):
-        # print "i am cmdloop"
-        flag = 0
+    # --- add function ---
+    def mycmdloop(self, intro=None, package=None):
         """
         Repeatedly issue a prompt, accept input, parse an initial prefix
         off the received input, and dispatch to action methods, passing them
         the remainder of the line as argument.
         """
-        # self.preloop()
-        print ">>>> go go go <<<<"
-        print ""
+        print package
+        stop = None
+        try:
+            commandLists = ["run mapp.package.info -a ", 
+                            "run mapp.package.attacksurface ", 
+                            "run mapp.activity.info -a ", 
+                            "run mapp.broadcast.info -a ", 
+                            "run mapp.provider.info -a ", 
+                            "run mapp.service.info -a ", 
+                            "run mapp.provider.finduri ", 
+                            "run mscanner.activity.browsable -a ", 
+                            "run mscanner.provider.injection -a ", 
+                            "run mscanner.provider.sqltables -a ", 
+                            "run mapp.xmltool.rexml -a ", ]
+            lines = []
+            for c in commandLists:
+                lines.append(c + package)
+
+            for item in lines:
+                l = self.precmd(item)
+                stop = self.onecmd(l)
+                stop = self.postcmd(stop, l)
+        except ValueError as e:
+            if e.message == "No closing quotation":
+                self.stderr.write("Failed to parse your command, because there were unmatched quotation marks.\n")
+                self.stderr.write("Did you want a single ' or \"? You need to escape it (\\' or \\\") or surround it with the other type of quotation marks (\"'\" or '\"').\n\n")
+            else:
+                raise
+        # self.postloop()
+
+    def cmdloop(self, intro=None):
+        """
+        Repeatedly issue a prompt, accept input, parse an initial prefix
+        off the received input, and dispatch to action methods, passing them
+        the remainder of the line as argument.
+        """
+        self.preloop()
         if self.use_rawinput and self.completekey:
             self.push_completer(self.complete, self.history_file)
         try:
             stop = None
             while not stop:
-                if flag == 0 and package != None:
-                    line = "go " + package
-                    print ">>>> " + line + " <<<<"
+                if self.cmdqueue:
+                    line = self.cmdqueue.pop(0)
                 else:
-                    if self.cmdqueue:
-                        line = self.cmdqueue.pop(0)
+                    if self.use_rawinput:
+                        try:
+                            line = raw_input(self.prompt)
+                        except EOFError:
+                            line = 'EOF'
                     else:
-                        if self.use_rawinput:
-                            try:
-                                line = raw_input(self.prompt)
-                            except EOFError:
-                                line = 'EOF'
+                        self.stdout.write(self.prompt)
+                        self.stdout.flush()
+                        line = self.stdin.readline()
+                        if not len(line):
+                            line = 'EOF'
                         else:
-                            self.stdout.write(self.prompt)
-                            self.stdout.flush()
-                            line = self.stdin.readline()
-                            if not len(line):
-                                line = 'EOF'
-                            else:
-                                line = line.rstrip('\r\n')
-                flag = flag + 1
+                            line = line.rstrip('\r\n')
+                            
                 try:
-                    if line[:3] == "go ":
-                        line = line[3:]
-                        commandLists = ["run mapp.package.info -a ", 
-                                        "run mapp.package.attacksurface ", 
-                                        "run mapp.activity.info -a ", 
-                                        "run mapp.broadcast.info -a ", 
-                                        "run mapp.provider.info -a ", 
-                                        "run mapp.service.info -a ", 
-                                        "run mapp.provider.finduri ", 
-                                        "run mscanner.activity.browsable -a ", 
-                                        "run mscanner.provider.injection -a ", 
-                                        "run mscanner.provider.sqltables -a ", 
-                                        "run mapp.xmltool.rexml -a ", ]
-                        lines = []
-                        for c in commandLists:
-                            lines.append(c + line)
-
-                        for item in lines:
-                            l = self.precmd(item)
-                            stop = self.onecmd(l)
-                            stop = self.postcmd(stop, l)
-                        l = self.precmd("exit")
-                        stop = self.onecmd(l)
-                        stop = self.postcmd(stop, l)
-
-                    else:
-                        line = self.precmd(line)
-                        stop = self.onecmd(line)
-                        stop = self.postcmd(stop, line)
+                    line = self.precmd(line)
+                    stop = self.onecmd(line)
+                    stop = self.postcmd(stop, line)
                 except ValueError as e:
                     if e.message == "No closing quotation":
                         self.stderr.write("Failed to parse your command, because there were unmatched quotation marks.\n")

@@ -26,10 +26,9 @@ class Console(cli.Base):
 
     def __init__(self):
         cli.Base.__init__(self)
+        # --- add ---
+        self._parser.add_argument("package", default=None, nargs='?', help="the unique identifier of the Agent to connect to")
         
-        # add by myself
-        self._parser.add_argument("package", default=None, nargs='?', help="get a package name to check~")
-
         self._parser.add_argument("device", default=None, nargs='?', help="the unique identifier of the Agent to connect to")
         self._parser.add_argument("--server", default=None, metavar="HOST[:PORT]", help="specify the address and port of the drozer server")
         self._parser.add_argument("--ssl", action="store_true", default=False, help="connect with SSL")
@@ -44,7 +43,6 @@ class Console(cli.Base):
         self.__server = None
         
     def do_connect(self, arguments):
-        # print "i am def do_connect(self, arguments)"
         """starts a new session with a device"""
         if arguments.password:
             with warnings.catch_warnings():
@@ -55,6 +53,7 @@ class Console(cli.Base):
             password = None
 
         device = self.__get_device(arguments)
+        
         server = self.__getServerConnector(arguments)
         response = server.startSession(device, password)
         
@@ -75,7 +74,11 @@ class Console(cli.Base):
                     session.onecmd(arguments.onecmd)
                     session.do_exit("")
                 else:
-                    session.cmdloop(None, arguments.package)
+                    # --- add 3 lines ---
+                    if arguments.package:
+                        session.mycmdloop(None, arguments.package)
+                    else:
+                        session.cmdloop()
             except KeyboardInterrupt:
                 print
                 print "Caught SIGINT, terminating your session."
@@ -224,7 +227,3 @@ class Console(cli.Base):
                     provider.trust(certificate, peer)
                     break
                     
-    def do_go(self, arguments, package=None):
-        print "-*-*-*-*-*-*-*-*-*-*-*-*"
-        print arguments
-        print "haha, i am def do_go(self)"

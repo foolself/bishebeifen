@@ -71,8 +71,6 @@ class Base(object):
             self.before_parse_args(argv)
         
     def run(self, argv=None):
-        # print "i am mwr/common/cli.py"
-        # print argv
         """
         Run is the main entry point of the console, called by the runtime. It
         parses the command-line arguments, and invokes an appropriate handler.
@@ -137,8 +135,6 @@ class Base(object):
             command = arguments.command
 
             if "do_" + command in dir(self):
-                # print "i am def __invokeCommand()"
-                # print "do_" + command
                 getattr(self, "do_" + command)(arguments)
             else:
                 raise UsageError("unknown command: " + command)

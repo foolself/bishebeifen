@@ -29,7 +29,7 @@ class Session(cmd.Cmd):
     """
 
     def __init__(self, server, session_id, arguments):
-        cmd.Cmd.__init__(self, arguments.package)
+        cmd.Cmd.__init__(self)
         self.__base = ""
         self.__has_context = None
         self.__module_pushed_completers = 0
@@ -620,13 +620,13 @@ class Session(cmd.Cmd):
         if module == None:
             raise KeyError(key)
         else:
-            #reload module
-            mod = reload(sys.modules[module.__module__])
-
-            module_class_name = module.__name__
-            module_class = getattr(mod,module_class_name)  #get module class object
-            return  module_class(self)
             # return module(self)
+            #reload module
+       		mod = reload(sys.modules[module.__module__])
+ 
+       		module_class_name = module.__name__
+       		module_class = getattr(mod,module_class_name)  #get module class object
+        	return module_class(self)
 
     def __module_name(self, key):
         """
