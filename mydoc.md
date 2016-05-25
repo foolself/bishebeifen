@@ -2,16 +2,101 @@
 title: my doc for drozer
 ---
 
+# 课题
+---
+## 题目
+
+基于drozer的Android应用程序安全评估
+
+## 课题达到的要求
+
+* 实现的系统是一个“可执行程序+案例库+drozer”，可执行程序运行在ubuntu平台，可管理测试用例、调度drozer进行测试、收集drozer的测试结论并分析展现； 
+* 实现的系统支持在ubuntu10.04以上系统运行；
+* 支持对各种类型的Android 应用进行安全评估，并生成安全分析报告。
+
 # 研究背景
 ---
 简述课题研究内容，必要性，Android 安全现状
+
+随着智能终端的迅速普及，智能手机对我们的生活工作影响也越来越大，智能手机中 Android 系统又是占据很大的市场和用户的，而由于 Android 系统自身的原因，应用软件拥有过多的高级的权限，没有像 ios 系统本身具有很高的安全性。又由于 Android 系统对于第三方应用的安全性没有严格的检测，第三方应用鱼龙混杂，难以规范，很多应用的发布不需要权威机构审核即可随意发布。再者，Android 存在各类第三方 App 碎片化问题，很多 App 开发者由于缺少审核机制，恶意软件发布商可以轻易地发布一些仿冒产品，因此山寨应用在 Android 平台层出不穷。有很多恶意产品甚至直接修改国内，外知名 App 产品，在其中增加恶意代码后便在论坛或某些软件商店发布，越来越多的Android恶意应用程序通过各类渠道被下载、安装到智能移动终端中，对普通用户来说，分辨难度极大。这些恶意应用正严重威胁着智能移动终端的安全，对Android应用本身的安全性进行有效的分析已成为确保Android智能移动终端安全一道重要的保障。
+Android 系统，第三方应用程序的漏洞不断被纰漏，而且层出不穷，安装包恶意篡改，权限滥用，Web Javascript 注入，隐私数据窃取等安全问题引起关注。本课题也是顺应当下的环境，设计实现对 Android 应用程序的静态检测，并形成报告以便参考。
 
 # Android 安全理论
 ---
 简述 Android 安全相关的理论知识
 
-## Android 应用程序安全 
-* 分类
+## Android 系统安全机制
+Android 系统，是基于 Linux 系统针对移动端深度定制的系统。Android 总体框架分为如下五层：Linux 内核层，用户空间原生代码层，Dalvik 虚拟机层，Android 框架层，Android 应用层。
+
+Android 操作系统应用了两套独立但又相互配合的权限模型。在底层，Linux 内核使用用户和用户组来实施权限控制，这套权限模型是从 Linux 继承过来的，用于对文件系统实体进行访问控制，也可以对其他 Android 特定资源进行控制。这一模型通常被称为 Android 沙箱。以 DalvikVM 和 Android 框架形式存在的 Android 运行时实施了第二套权限模型。这套模型在用户安装应用程序时是向用户公开的，定义了应用拥有的权限，从而限制 Android 应用的能力。事实上，第二套权限模型中的某些权限直接映射到底层操作系统上的特定用户，用户组和全能。
+
+在 Linux 中，一个用户 ID 识别一个给定用户;在 Android 上，一个用户 ID 识别一个应用程序。应用程序在安装时被分配用户 ID，应用程序在设备上的存续期间内，用户 ID 保持不变。权限是关于允许或限制应用程序(而不是用户)访问设备资源。
+
+从本质上来说，Android 通过使用沙箱的概念来实现应用程序之间的分离和权限，以允许或拒绝一个应用程序访问设备的资源，比如说文件和目录、网络、传感器和 API。为此，Android 使用一些 Linux 实用工具(比如说进程级别的安全性、与应用程序相关的用户和组 ID，以及权限)，来实现应用程序被允许执行的操作。
+
+Android 应用程序运行在它们自己的 Linux 进程上，并被分配一个惟一的用户 ID。默认情况下，运行在基本沙箱进程中的应用程序没有被分配权限，因而防止了此类应用程序访问系统或资源。但是 Android 应用程序可以通过应用程序的 manifest 文件请求权限。
+
+**android 安全技术揭秘与防范**
+沙箱（Sandbox）模型，是一种能够保证系统安全的关键技术，已经在浏览器等领域得到了成功应用。Android 作为优秀的开源移动平台操作系统，有相应的沙箱模型。通俗的来说，沙箱模型就是系统使用重定向技术，将应用的所有操作都放在一个虚拟的系统中运行，就算有病毒，也不会危害到真实的系统。
+Android 系统是基于 Linux 的多用户操作系统，系统给每一个应用都分配惟一的 UID ，同时也会为该应用程序下所有的文件与所有的操作都配置相同的权限，只有相同的 UID 的应用程序才能对这些文件进行读写操作。
+
+## Android 应用程序组成
+
+### Android 项目清单文件 AndroidManifest.xml
+
+每一个 Android 项目都包含一个清单（Manifest）文件 AndroidManifest.xml ，它存储在项目层次中的最底层。清单可以定义应用程序及组件的结构和元数组。
+
+AndroidManifest.xml 主要包含一下功能：
+* 声明应用程序的包名，版本号，包名是应用的唯一标识。
+* 描述应用的组件，包括 Activity，Service，Broadcast Receiver，Content Provider。
+* 说明应用的 component 运行在哪个 process 下。
+* 声明应用所必须具备的权限，用以访问受保护的部分 API，以及与其他应用程序的交互。
+* 声明应用程序运行时需要的环境配置信息。
+* 定义自定义元素的 meta 信息。
+* 声明共享进程 ID，ShareUserId。
+### Intents
+
+Intent 是一种运行时绑定（Runtime Binding）机制，它能够在程序运行的过程中连接两个不同的组件。通过 Intent，程序可以向 Android 表达某种请求或意愿，Android 会根据意愿的内容选择适当的组件来处理请求。
+
+### 四大组件模型
+
+* Activity
+Activities 是一个应用程序的交互组件，通过屏幕用来提供应用程序与用户之间的交互行为，每一个 Activity 都提供一个屏幕，例如，当你启动一个应用程序，你看它的主界面（Launch Activity）。用户通过 Activities 可以用来交互来完成某项任务，例如拨号，拍照，发送 Email 看地图等。
+
+* Broadcast resevier
+Broadcast receivers也是非图形组件，它允许应用程序对某些系统或应用程序事件注册。例如，当一个应用程序请求接收的SMS信息时，需要用 broadcast receiver 注册一个事件（event）。在其它应用程序组件中，广播接收器可以在运行时被创建。
+
+* Content Provider
+Content providers 是应用程序的数据仓库，提供了一个标准的方式来检索，修改和删除数据。此组件是负责以结构和安全的方式提供应用程序的数据到另一个应用程序。
+
+* Service
+Services 不提供图形界面组。Services 是长时间执行在后台运行的任务，为自身应用程序或其他应用程序提供服务，当用户打开另一应用或已关闭 Services 可以继续后台运行。
+
+
+## Android 应用程序安全
+
+### 分类
+* 代码安全分析
+代码安全主要是指 Android apk 有被篡改，盗版等风险，产生代码安全的主要原因是 apk 文件很容易被反编译，重新打包。要保代码安全就是防止逆向分析工具对 apk 文件的反编译与篡改，保证所运行的代码的安全可信。
+
+* 组件安全分析
+组件安全分析就是对 Android 应用程序内部的四大组件 Activity，Service，Broadcast Receiver，Content Provider 的安全分析，组件之间的通信 Intent 分析，以及它们的权限使用不当带来的问题，常见的：恶意调用，恶意接受数据，仿冒应用（恶意钓鱼，启动登录界面），恶意发送广播，启动应用服务，接受组件返回的数据，拦截有序广播等。
+
+* 存储安全分析
+存储安全分析主要就是对 Anddroid 应用程序运行中所产生的文件，如数据库文件，私有文件，证书文件等，进行安全验证分析，特别是对明文存储敏感数据，导致直接被攻击者复制或篡改。
+常见问题有：
+1. 将隐私数据明文存在外部存储。
+2. 将系统数据明文存在外部存储。
+3. 将软件运行时依赖的数据保存在外部存储。
+4. 将软件安装或者将二进制代码保存在外部存储。
+5. 全局可读写的内部文件存储
+
+* 通信安全分析
+通信安全是客户端避免不了的问题，在对敏感数据进行传输时应该采用基于 SSL/TLS 的 HTTPS 传输。由于移动软件大多只是和固定的服务器通信，可以采用证书密码技术，更精确的直接验证服务器是否拥有某张特定的证书。如开发者在代码中不检查服务器证书的有效性，或选择接受所有的证书时，这种做法可能导致中间人攻击。
+
+应用程序安全分析还有漏洞分析，系统安全分析等。
+
+### 
 * Android 安全机制
 * 漏洞，攻击方法
 * 防御策略
@@ -31,151 +116,131 @@ title: my doc for drozer
 ---
 列举目前大家常用的检测工具，及着重的介绍本课题所使用的检测工具 drozer
 
+* android-sdk/build-tool
+adb, aapt, dexdump
+这些工具是由 Google 官方 Android-SDK 中提供的。ADB（Android Debug Bridge）提供了与 Android 设备中原生级组件进行交互所必需的功能。它让开发者或安全工程师能够读取文件系统目录，与包管理器，应用管理器，内核驱动接口以及初始化脚本等进行交互。
+* apktool
+apktool 可以说是 Android 应用程序开发者，安全工程师等相关人员使用最多的工具，它是一个强大的第三方工具，允许用户快速，方便地对 apk 文件进行反编译的许多操作。使用工具可以轻松的获得 apk 文件中的 manifest.xml 文件，查看应用程序的权限等重要信息。
 
-# 检测 detection
+## drozer
+
+### 简介
+Drozer 是由 MWR 实验室人员开发，一款针对 Android 系统的安全测试框架，通过自动化来避免繁琐的步骤，减少评估时间，提高效率。更重要的一点是，drozer 自由度比较高，可以很容易的对其扩展，以实现自己特定的功能。
+drozer 允许你设定一个Android应用程序和其他应用程序的交互作用。它可以做任何安装的应用程序可以做事情，比如利用Android的进程间通信（IPC）机制与底层操作系统交互。
+drozer 是一个漏洞检测管理工具，利用 drozer 也可以通过建立恶意文件或利用网页漏洞，来远程检测 Android 设备。根据的应用程序权限授予的脆弱性，利用加反向外壳技术，可以安装一个附带特定应用程序权限的drozer代理。
+
+### 工作原理
+
+drozer 框架主要三部分：Agent，Console，Server。
+
+Agent：一个运行在设备或模拟器上被用于测试的一个轻量级的Andr​​oid应用程序。有代理，一个提供用户界面和嵌入式服务器的两个版本，另一个不包含一个图形界面，并且可以用作破坏设备上的远程管理工具。自从 drozer 2.0版本，支持“Infrastructure mode”，该代理可以建立连接向外穿越防火墙和NAT。允许创建更逼真的攻击情景以及请求drozer服务器。
+
+Console：提供一个命令行界面，用于执行用户输入的计算机上命令，通过代理与设备或模拟器进行交互。
+
+Server：提供一个中心点，使 Console 和 Agent 可以结合，并在它们之间保持会话。
+
+这些组件使用名为drozerp的自定义协议（drozer protocol）来交换数据。Agent 是一个知道如何运行从控制台接收的命令，并提供结果的空壳。其中功能模块的实现是运用 Java 反射技术，方便控制端 Python 程序调用执行。这意味着，从Python代码是可以实例 Android 应用程序中的代码一样，实例 Java 对象，并与所连接的设备上的 Java 对象进行交互。
+
+### 功能模块
+
+drozer 框架自带了基本的一些模块，如：information.deviceinfo，app.package.list，app.package.info，app.activity.info 等，用户通过这些模块可以和容易的获得设备信息，应用程序基本信息等。再如 minformation.permissions，mscanner.provider.finduris，mscanner.provider.sqltables 等模块，可以迅速扫描发现连接设备上已有应用程序上存在的一些安全性薄弱的地方。
+
+### 工具使用
+
+* 安装
+PC 端安装 drozer 框架
+Android 设备上安装 drozer-agent
+
+* 启动环境
+在 PC 端开启 adb 服务，连接 Android 设备。
+`adb start-server`
+设置好端口转发：
+`adb forward tcp:31415 tcp:31415`
+在 Android 设备端 启动 drozer-agent 应用程序，打开 “Embedded Server”开关。
+[picture]
+* 启动 drozer console 模式
+如果前两步已经操作成功，接下来就可以使用如下命令来进入 drozer console 模式：
+`drozer console connect`
+[picture]
+* 使用功能模块
+进入 drozer console 模式之后，就可以使用 drozer 中的模块，如使用 "app.package.list -f" 命令查找包名中含有 "browser" 的应用程序：
+[picture]
+
+### 编写自己的模块
+drozer 框架提供了接口，方便开发者编写自己的功能模块。
+在编写的每个模块中都要继承 drozer.modules 中的 Module 类，定义的类中要声明一些模块的基本信息，而且有些是必要的，比如 path = ""，提供了模块的路经，使得 drozer 可以找到自己的模块。
+[picture]
+模块的主要逻辑功能要放在 execute 方法中，这样，当 drozer 执行模块时，就会执行 execute 方法中的逻辑了。
+[picture]
+
+# 安全评估系统
 ---
+基于 drozer 的安全评估系统实现
 
-## connect device
+## 概述
+Android 应用程序安全评估系统：
+所实现的系统一个自动化的检测评估 Android 应用程序安全的系统。运行程序，给定 Android 应用程序包即 apk 文件，即可对其进行多方面检测，收集检测结果，最后通过图形界面直观的展示评估报告。系统使用 python 程序实现整体逻辑，检测核心技术基于开源框架 drozer 修改，结果展示界面程序基于 Python 第三方库 PyQt 库。
 
-open the drozer agent on you mobile device, and turn on the button of "Embedded Server".
+## 检测项目及原理
 
-```
-$ adb kill-server
-$ adb start-server
-$ adb forward tcp:31415 tcp:31415
-$ drozer console connect
-```
+* 应用权限问题
+在现有的 Android 权限模型的细粒度下，开发者有可能会申请比应用实际所需更多的权限，导致这一结果的部分原因可能是权限执行与文档中的不一致。尽管开发者参考文档中描述了给定类与方法的绝大多数权限要求，但是它们并不是 100% 完整或 100% 准确的。还有一个不可回避的可能，就是开发者在开发应用时，清楚了该应用所需的必要权限，而由于出于某些原因，其还申请了一些额外的权限。在 Android 系统中应用程序很容易申请到其想获得的权限，当然系统会让用户自己选择是否授予应用程序某种权限，而这一动作，一般用户都会忽略掉，随随便便的允许了应用程序的权限申请。这些申请过度的权限，都会带来一定的安全问题，一旦用户疏忽赋予了应用程序某一重要权限，就可能引起数据泄漏，短信扣费等或大或小的损失。因此对应用程序申请的权限进行检测是最基础的，也是重要的。
 
-## install application
+在所实现的安全评估系统中，首先会对 Android 应用程序所申请的权限进行检测分析，通过对应用程序及权限分级分类，判断提取出该应用申请的过度权限及安全级别高的权限，在评估中将这些权限列为不安全项。
 
-```
-adb install packagename.apk
-```
+* 允许备份 AllowBackup
+Android API Level 8及其以上Android系统提供了为应用程序数据的备份和恢复功能，此功能的开关决定于该应用程序中AndroidManifest.xml文件中的allowBackup属性值 ，其属性值默认是True，也就是说，开发者在不明确指定其值的情况下，其值为 True。当allowBackup标志为true时，用户即可通过adb backup和adb restore来进行对应用数据的备份和恢复。
 
-## get app's information
+Android属性allowBackup安全风险源于adb backup容许任何一个能够打开USB 调试开关的人从Android手机中复制应用数据到外设，一旦应用数据被备份之后，所有应用数据都可被用户读取；adb restore容许用户指定一个恢复的数据来源（即备份的应用数据）来恢复应用程序数据的创建。因此，当一个应用数据被备份之后，用户即可在其他Android手机或模拟器上安装同一个应用，以及通过恢复该备份的应用数据到该设备上，在该设备上打开该应用即可恢复到被备份的应用程序的状态。
+
+尤其是通讯录应用，一旦应用程序支持备份和恢复功能，攻击者即可通过adb backup和adb restore进行恢复新安装的同一个应用来查看聊天记录等信息；对于支付金融类应用，攻击者可通过此来进行恶意支付、盗取存款等；因此为了安全起见，开发者务必将allowBackup标志值设置为false来关闭应用程序的备份和恢复功能，以免造成信息泄露和财产损失。
+
+对此，所实现的安全评估系统，主要通过对 Androidmanifest.xml 文件进行提取，并检测发现其中是否定义 AllowBackup 属性，如果没有发现，则判定其值为 True，并列为不安全项，如果其中明确定义 Allowbackup 值为 False，则判定这项检测为安全。
+
+* 不安全存储
+Android 为数据存储提供了多种标准支持，包括共享配置文件（Shared Preferences），SQLite 数据库和原始文件。另外，每种存储类型还能以多种方式创建和访问，包括通过受管理代码和原生代码，或通过类似于 Content Provider 的结构化接口。最普遍的问题包括对敏感数据的明文存储，未受保护的 Content Providers 接口，以及不安全的文件权限。
+
+对此，所实现的安全评估系统，实现对应用程序中以上存在安全风险的方面进行扫描，发现共享配置文件，未受保护的 Content Providers，以及不安全的 SQLite 数据库等信息，将这些存在数据安全隐患的问题列为不安全项。
+
+* WebView 安全
+WebView 能加载显示网页，可以将其视为一个浏览器。对与 Android 系统来说 WebView 本身只是一个控件，它存在的一些漏洞对于整个应用来说应该是影响不大的。但是，随着 Android 的发展越来越好，Android 应用程序存在着升级难，更新难等客户端的通病，使得目前市面上的 WebApp 越来越流行起来，这就使得 WebView 的漏洞影响面得到了扩大。
+远程代码执行漏洞是 WebView 中常见的漏洞之一，这是由于应用程序在 WebView 中使用了 JavaScriptInterface 造成的，使得远程的页面能够通过此漏洞来执行本地命令。
+
+对此，所实现的评估系统会针对应用程序是否添加使用了 WebView 控件进行检测，并且检测此 WebView 中是否运行可执行 JavaScript 代码，也就是是否设置 setJavaScriptEnable 方法的值为 True，来判断此控件是否存在安全隐患。
+
+* 本地拒绝服务攻击
+针对 Android 应用程序的拒绝服务攻击手段有多种，其中就有对 Activity 的攻击。
+Activity 的启动都是通过 startActivity 方法发送一个 Intent 来启动的，Intent负责传输相应的数据，结果返回也是通过 Intent 来传输数据返回的。如果 Intent 被恶意程序拦截或者伪造，就可能让应用程序中 Activity 中的重要数据泄漏，或者 应用程序崩溃而导致拒绝服务。
+
+所实现的系统对应用程序的 Activity 检测，在启动 Activity 时，使用 Intent 传输空的或者畸形的数据，来检测所启动的 Activity 是否能够正常处理相应，如果被检测的 Activity 能够正常启动或者拒绝启动，则认为其组件是安全的，如若被检测 Activity 不能正常响应，并且所属的应用程序崩溃（拒绝服务），则认为此组件是存在安全问题，列入不安全项中。
+
+## 系统工作步骤及原理
+
+### 检测前准备
+执行 python 程序 auto.py，程序提示输入 apk 文件所在路经，输入之后，程序自动查找提供路经下所有 apk 文件，之后，程序循环每一个 apk 文件进行操作。启动 adb 服务，连接设备，设置好端口转发，取出一个 apk 文件，解析并获得其完整包名，主要代码如下：
+[picture]
+
+### 检测并收集信息
+连接 drozer，并将上一步获得的包名作为参数传入，程序将调用自定义 drozer 功能模块对 Android 应用程序进行上述检测项目进行检测，并将检测结果存入 XML 文件。所有项目检测完毕，删除应用程序。
+[picture]
+[picture]
+
+### 形成报告
+打开图形界面程序 display.py，选择存有检测信息的 XML 文件，解析并形成报告，主界面显示主要安全项，过度权限，JavaScript 注入隐患，数据泄漏等，点击 “detail”按钮，可以查看完整检测信息，包含应用程序的基本信息，所有的权限，攻击面等：
+[picture]
+
+# 系统有效性检验
 ---
-
-list the application summary information and output to a file
-
-* Get the application package name.
-```
-dz> run app.package.list -f estro
-com.estrongs.android.pop (ES File Explorer)
-```
-
-* Now, use the package name to get information.
-This step will also output the information to a file.
-```
-dz> run mapp.package.info -a com.estrongs.android.pop
-...
-dz> run mapp.package.attacksurface com.estrongs.android.pop
-...
-dz> run mapp.activity.info -a com.estrongs.android.pop
-...
-dz> run mapp.broadcast.info -a com.estrongs.android.pop
-...
-dz> run mapp.provider.info -a com.estrongs.android.pop
-...
-dz> run mapp.service.info -a com.estrongs.android.pop
-...
-```
-
-To find the activities that are not exported by an application, you can examine the manifest or use the -u flag on the app.activity.info module.
-
-e.g.
-
-```
-dz> run mapp.activity.info -a com.estrongs.android.pop -u
-```
-
-## Exploiting Insecure Content Providers
-
-### Unprotected Content Providers
-
-> A common root cause of content provider problems is the fact that they are not explicitly marked as exported="false" in their manifest declarations because the assumption is that they follow the same default export behavior as other components.
-
-gather information about exported content providers
-
-```
-dz> run app.provider.info -a com.mwr.example.sieve
-```
-
-All content providers whether they are exported or not can be queried from a privileged context. To find content providers inside the default Android Clock package that have not been exported, you can use the -u flag on app.provider .info:
-
-```
-dz> run app.provider.info -a com.android.deskclock -u
-```
-
-Scan content URIs with follow command
-
-```
-dz> run app.provider.finduri com.mwr.example.sieve 
-Scanning com.mwr.example.sieve... 
-content://com.mwr.example.sieve.DBContentProvider/ 
-content://com.mwr.example.sieve.FileBackupProvider/ 
-content://com.mwr.example.sieve.DBContentProvider 
-content://com.mwr.example.sieve.DBContentProvider/Passwords/ 
-content://com.mwr.example.sieve.DBContentProvider/Keys/ 
-content://com.mwr.example.sieve.FileBackupProvider 
-content://com.mwr.example.sieve.DBContentProvider/Passwords 
-content://com.mwr.example.sieve.DBContentProvider/Keys
-```
-
-Now, we get some path that we can access and have any protect permissions. and we may found something can exploit like: `content://com.mwr.example.sieve.DBContentProvider/Passwords`
-
-Query this content URI by follow command: 
-
-```
-dz> run app.provider.query content://com.mwr.example.sieve.DBContentProvider/Passwords
-```
-
-Further more, we can insert a itme to this database and so on.
-
-## Attacking Insecure Services
-
-### Unprotected Started Services
-
-> If a service is exported, either explicitly or implicitly, other applications on the device can interact with it. Started services are ones that implement the onStartCommand() method inside its class. This method receives intents destined for this service from applications and may be a source of vulnerabilities for an attacker. This is completely dependent on what the code does inside this function. The code may perform an unsafe task even just by being started or may use parameters that are sent and when certain conditions take place, perform an unexpected action.
-
-## Abusing Broadcast Receivers
-
-## scanner
-
-```
-scanner.activity.browsable   scanner.misc.writablefiles 
-scanner.misc.native               scanner.provider.finduris 
-scanner.misc.readablefiles   scanner.provider.injection 
-scanner.misc.secretcodes     scanner.provider.sqltables 
-scanner.misc.sflagbinaries   scanner.provider.traversal
-```
-
-
-
-# 检测报告 report
----
-检测结果分析，如何呈现，量化
-
-## 
+通过检测已知存在特定漏洞的 Android 应用程序，得到预期效果，证明实现的系统的有效性。
 
 # 存在问题，不足
 ---
 
 
 
-# 批量处理
 
-给定一个文件夹，安装该文件下的apk文件，并检测行对应的 application，
+# 参考文献
 
-* 启动环境，device, adb, drozer
+* Android Security Cookbook, Keith Makan, Scott Alexander-Bown
+* Android Hacker's Handbook
 
-* 安装 apk 文件
-adb install ***.apk
-
-* 获得所安装 apk 文件的包名，检测及卸载时用
-aapt d badging design/apps/xbrowser-release.apk | grep 'package:'
-
-* 检测
-drozer, go xxx.xxx.xxx
-
-* 卸载
-adb uninstall xxx.xxx.xxx

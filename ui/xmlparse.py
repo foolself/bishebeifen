@@ -26,31 +26,33 @@ class Parser(object):
 	def get_package_info(self):
 		result = "package_info: \n\n"
 
-		package_info = self.package.package_info
-		for x in package_info.children:
-			try:
+		try:
+			package_info = self.package.package_info
+			for x in package_info.children:
 				item = x.name + ": " + x.contents[0] + "\n\n"
 				result = result + item
-			except:
-				pass
+		except:
+			pass
 		return result
 
 	def get_Permissions(self, who = None):
 		list_up = []
 		list_dp = []
-		Uses_Permissions = self.package.package_info.Uses_Permissions
-		Defines_Permissions = self.package.package_info.Defines_Permissions
-		for u in Uses_Permissions.children:
-			list_up.append(u.contents[0])
-		for d in Defines_Permissions.children:
-			list_dp.append(d.contents[0])
 		result_up = "Uses_Permissions: \n\n"
-		for i in list_up:
-			result_up = result_up + i + "\n\n"
 		result_dp = "Defines_Permissions: \n\n"
-		for i in list_dp:
-			result_dp = result_dp + i + "\n\n"
-
+		try:
+			Uses_Permissions = self.package.package_info.Uses_Permissions
+			Defines_Permissions = self.package.package_info.Defines_Permissions
+			for u in Uses_Permissions.children:
+				list_up.append(u.contents[0])
+			for d in Defines_Permissions.children:
+				list_dp.append(d.contents[0])
+			for i in list_up:
+				result_up = result_up + i + "\n\n"
+			for i in list_dp:
+				result_dp = result_dp + i + "\n\n"
+		except:
+			pass
 		result = result_up + "\n" + result_dp
 		if who == None:
 			return result
@@ -60,12 +62,14 @@ class Parser(object):
 	def get_Attack_Surface(self):
 		list_Attack_Surface = []
 		result = "Attack_Surface: \n\n"
-		Attack_Surface = self.package.Attack_Surface
-		for i in Attack_Surface.children:
-			list_Attack_Surface.append([i.name, i.contents[0]])
-		for i in list_Attack_Surface:
-			result = result + i[0] + ": " + i[1] + "\n\n"
-			
+		try:
+			Attack_Surface = self.package.Attack_Surface
+			for i in Attack_Surface.children:
+				list_Attack_Surface.append([i.name, i.contents[0]])
+			for i in list_Attack_Surface:
+				result = result + i[0] + ": " + i[1] + "\n\n"
+		except:
+			pass
 		return result
 	def get_Activities(self):
 		list_Activities = []
@@ -122,20 +126,22 @@ class Parser(object):
 	def get_Uri(self):
 		list_Uri = []
 		result = "Content URIs: \n\n"
-		FindUri = self.package.FindUri
-		for i in FindUri.children:
-			list_Uri.append(i.contents[0])
-		for i in list_Uri:
-			result = result + i + "\n\n"
-
+		try:
+			FindUri = self.package.FindUri
+			for i in FindUri.children:
+				list_Uri.append(i.contents[0])
+			for i in list_Uri:
+				result = result + i + "\n\n"
+		except:
+			pass
 		return result
 	def get_Browsable(self, who=None):
-		Browsable = self.package.Browsable
-		Invocable_URIs = Browsable.Invocable_URIs
-		Classes = Browsable.Classes
-
 		result = "Browsable: \n\n"
 		try:
+			Browsable = self.package.Browsable
+			Invocable_URIs = Browsable.Invocable_URIs
+			Classes = Browsable.Classes
+
 			result = result + "Invocable_URIs: \n\n"
 			for i in Invocable_URIs.children:
 				result = result + i.contents[0] + "\n"
@@ -147,48 +153,58 @@ class Parser(object):
 
 		return result if who == None else result[:800]
 	def get_Injection(self):
+		result = "Injection: \n\n"
 		list_Not_Vulnerable = []
 		list_Injection_Projection = []
 		list_Injection_Selection = []
+		try:
+			Injection = self.package.Injection
+			Not_Vulnerable = Injection.Not_Vulnerable
+			Injection_Projection = Injection.Injection_Projection
+			Injection_Selection = Injection.Injection_Selection
 
-		Injection = self.package.Injection
-		Not_Vulnerable = Injection.Not_Vulnerable
-		Injection_Projection = Injection.Injection_Projection
-		Injection_Selection = Injection.Injection_Selection
 
-		result = "Injection: \n\n"
+			result = result + "Not_Vulnerable: \n\n"
+			for i in Not_Vulnerable.children:
+				result = result + i.contents[0] + "\n\n"
+				list_Not_Vulnerable.append(i.contents[0])
 
-		result = result + "Not_Vulnerable: \n\n"
-		for i in Not_Vulnerable.children:
-			result = result + i.contents[0] + "\n\n"
-			list_Not_Vulnerable.append(i.contents[0])
+			result = result + "Injection_in_Projection: \n\n"
+			for i in Injection_Projection.children:
+				result = result + i.contents[0] + "\n\n"
+				list_Injection_Projection.append(i.contents[0])
 
-		result = result + "Injection_in_Projection: \n\n"
-		for i in Injection_Projection.children:
-			result = result + i.contents[0] + "\n\n"
-			list_Injection_Projection.append(i.contents[0])
-
-		result = result + "Injection_in_Selection: \n\n"
-		for i in Injection_Selection.children:
-			result = result + i.contents[0] + "\n\n"
-			list_Injection_Selection.append(i.contents[0])
-
+			result = result + "Injection_in_Selection: \n\n"
+			for i in Injection_Selection.children:
+				result = result + i.contents[0] + "\n\n"
+				list_Injection_Selection.append(i.contents[0])
+		except:
+			pass
 		return result
 
 	def get_SqlTables(self, who = None):
-		SqlTables = self.package.SqlTables
 		result = "Access SqlTables: \n\n"
 		try:
+			SqlTables = self.package.SqlTables
 			if list(SqlTables.children):
 				for i in SqlTables.children:
 					result = result + "Table Uri: " + i.Uri.contents[0] + "\n"
 					result = result + "Table Content: " + i.Table_List.contents[0] + "\n\n"
 			else:
-				result = result + "Null."
+				result = result + "Null.\n\n"
 		except:
-			result = result + "Null."
-		return result if who == None else result[:800]
+			result = result + "Null.\n\n"
+		return result if who == None else result[:800] + self.get_AllowBackup()
+	def get_AllowBackup(self):
+		result = "AllowBackup: \n"
+		try:
+			allowbackup = self.package.Backup.AllowBackup
+			isAb = allowbackup.contents[0]
+			result = result + isAb + "\n"
+		except:
+			pass
+		return result
 if __name__ == '__main__':
 	# parser = Parser("../report/com_mwr_example_sieve.xml")
-	parser = Parser("../report/com_baidu_input.xml")
-	print parser.get_iss_permissions()
+	parser = Parser("../report/com_android_browser.xml")
+	print parser.get_SqlTables(1)

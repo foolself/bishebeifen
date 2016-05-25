@@ -25,9 +25,9 @@ The payload that is used in these exploits is a rogue drozer agent that is essen
 Depending on the permissions granted to the vulnerable app, drozer can install a full agent, inject a limited agent into the process using a novel technique or spawn a reverse shell.
 drozer is open source software, released under a BSD license and maintained by MWR InfoSecurity. To get in touch with the project see Section 6.
 
-drozer允许你设定一个Android应用程序和其他应用程序的交互作用。它可以做任何安装的应用程序可以做事情，比如利用Android的进程间通信（IPC）机制与底层操作系统交互。
-利用 drozer 也可以通过建立恶意文件或利用网页漏洞，来远程检测 Android 设备。drozer 是一个漏洞检测管理工具。
-根据授予的脆弱的应用程序的权限，可以安装一个全drozer代理，将有限的代理的过程中使用了一种新的技术或产生反向的外壳。
+drozer 允许你设定一个Android应用程序和其他应用程序的交互作用。它可以做任何安装的应用程序可以做事情，比如利用Android的进程间通信（IPC）机制与底层操作系统交互。
+drozer 是一个漏洞检测管理工具，利用 drozer 也可以通过建立恶意文件或利用网页漏洞，来远程检测 Android 设备。
+根据的应用程序权限授予的脆弱性，利用加反向外壳技术，可以安装一个附带特定应用程序权限的drozer代理。
 drozer是开放源代码的软件，发布了BSD许可下由MWR InfoSecurity保持。去接触的项目见6节。
 
 ## 3. How drozer Works
@@ -36,6 +36,14 @@ Agent— A lightweight Android application that runs on the device or emulator b
 Console—A command-line interface running on your computer that allows you to interact with the device through the agent.
 Server—Provides a central point where consoles and agents can rendezvous, and routes sessions between them.
 These components use a custom protocol named drozerp (drozer protocol) to exchange data. The agent is somewhat of an empty shell that knows only how to run commands it receives from the console and provide the result. A very technically brilliant method of using the Java Reflection API facilitates the execution of code from Python in the console to Java on the agent. This means that from Python code it is possible to instantiate and interact with Java objects on the connected device.
+
+Agent - 一个运行在设备或模拟器上被用于测试的一个轻量级的Andr​​oid应用程序。有代理，一个提供用户界面和嵌入式服务器的两个版本，另一个不包含一个图形界面，并且可以用作破坏设备上的远程管理工具。自从 drozer 2.0版本，支持“Infrastructure mode”，该代理可以建立连接向外穿越防火墙和NAT。允许创建更逼真的攻击情景以及请求drozer服务器。
+
+Console-提供一个命令行界面，用于执行用户输入的计算机上命令，通过代理与设备或模拟器进行交互。
+
+Server-提供一个中心点，使 Console 和 Agent 可以结合，并在它们之间保持会话。
+
+这些组件使用名为drozerp的自定义协议（drozer protocol）来交换数据。代理是一个知道如何运行从控制台接收的命令，并提供结果的空壳。使用Java反射API的一个非常辉煌的技术方法，便于代码的Python控制台到Java的代理执行。这意味着，从Python代码是可能的实例，并与所连接的设备上的Java对象进行交互。
 
 ## 4. Modules
 ---
@@ -374,14 +382,22 @@ Android applications can make use of four standard components that can be invoke
 
 * Activities
 Activities represent visual screens of an application with which users interact. For example, when you launch an application, you see its main activity. Figure 6.4 shows the main activity of the clock application.
+Activities 是通过屏幕用来提供应用程序与用户之间的交互行为。例如，当你启动一个应用程序，你看它的主界面（Launch Activity）。
 * Services
 Services are components that do not provide a graphical interface. They provide the facility to perform tasks that are long running in the background and continue to work even when the user has opened another application or has closed all activities of the application that contains the service. To view running services on your device go to the Running tab in the Application Manager, as shown in Figure 6.5.
 Two different modes of operation exist for services. They can be started or bound to. A service that is started is typically one that does not require the ability to communicate back to the application that started it. A bound service provides an interface to communicate back results to the calling application. A started service continues to function even if the calling application has been terminated. A bound service only stays alive for the time that an application is bound to it.
 
+Services 不提供图形界面组。Services 是长时间执行在后台运行的任务，为自身应用程序或其他应用程序提供服务，当用户打开另一应用或已关闭 Services 可以继续后台运行。
+
 * Broadcast receivers
 Broadcast receivers are non-graphical components that allow an application to register for certain system or application events. For instance, an application that requires a notification when receiving an SMS would register for this event using a broadcast receiver. This allows a piece of code from an application to be executed only when a certain event takes place. This avoids a situation where any polling needs to take place and provides a powerful event-driven model for applications. In contrast to other application components, a broadcast receiver can be created at runtime.
+
+Broadcast receivers也是非图形组件，它允许应用程序对某些系统或应用程序事件注册。例如，当一个应用程序请求接收的SMS信息时，需要用 broadcast receiver 注册一个事件（event）。在其它应用程序组件中，广播接收器可以在运行时被创建。
+
 * Content providers
 These are the data storehouses of an application that provide a standard way to retrieve, modify, and delete data. The terminology used to define and interact with a content provider is similar to SQL: query, insert, update, and delete. This component is responsible for delivering an application’s data to another in a structured and secure manner. The developer defines the back-end database that supports a content provider, but a common choice is SQLite (see http://www.sqlite.org/), because Android makes the implementation of SQLite so easy due to their similar structures. Defining a content provider that can retrieve files and serve them is also possible. This may provide a preferable approach for applications that implement access control on the retrieval of their files from other applications.
+
+Content providers 是应用程序的数据仓库，提供了一个标准的方式来检索，修改和删除数据。此组件是负责以结构和安全的方式提供应用程序的数据到另一个应用程序。
 
 ## 10. attacksurface
 ---
